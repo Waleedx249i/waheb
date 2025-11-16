@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Waheeb Fit — Mobile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --black: #030406;
+            --navy: #071226;
+            --blue: #001691;
+            /* lighter blue accent */
+            --muted-blue: rgba(31, 163, 255, 0.12);
+        }
+
+        html,
+        body {
+            background: var(--black);
+            height: 100%;
+            margin: 0;
+        }
+
+        /* PAGE LOADER */
+        #loader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: #000;
+            color: #fff;
+        }
+
+        .spinner {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 6px solid rgba(255, 255, 255, 0.07);
+            border-top-color: var(--blue);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* LANG SWITCH (top center) */
+        .lang-switch {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 60;
+            display: flex;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 6px;
+            border-radius: 999px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+        }
+
+        .lang-switch a {
+            display: inline-block;
+            padding: 6px 10px;
+            font-weight: 600;
+            color: #fff;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            background: transparent;
+        }
+
+        .lang-switch a.active {
+            background: linear-gradient(135deg, var(--blue), #2a76c9);
+            box-shadow: 0 8px 22px rgba(31, 163, 255, 0.12);
+        }
+
+        /* HERO: background image with subtle blue filter overlay + textured stripes */
+        .hero-bg {
+            position: relative;
+            background-image: linear-gradient(to bottom, rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.6)), url('background.jpg');
+            background-size: cover;
+            background-position: center;
+            -webkit-background-size: cover;
+            background-attachment: fixed;
+            /* keep background visually fixed */
+            overflow: hidden;
+        }
+
+        .hero-bg::after {
+            /* light blue vignette + subtle diagonal texture to suggest power */
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(60% 60% at 50% 20%, rgba(31, 163, 255, 0.08), transparent 30%),
+                repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.02) 0 6px, rgba(255, 255, 255, 0.00) 6px 12px);
+            mix-blend-mode: overlay;
+        }
+
+        /* HERO ANIM: entrance overlay (doesn't move the bg image) */
+        .hero-entrance {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            transform: scale(1.03);
+            transition: opacity 700ms cubic-bezier(.2, .9, .2, 1), transform 700ms cubic-bezier(.2, .9, .2, 1);
+            background: linear-gradient(120deg, rgba(31, 163, 255, 0.04), rgba(0, 0, 0, 0));
+            mix-blend-mode: overlay;
+        }
+
+        .hero-entrance.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Strong title shadow for punchy feel */
+        .hero-title {
+            text-shadow: 0 8px 30px rgba(0, 0, 0, 0.75), 0 2px 6px rgba(31, 163, 255, 0.06);
+        }
+
+        /* Packs: use layered background (gradient on top of image) so fallback shows */
+        .pack-card {
+            min-height: 11rem;
+            /* h-44 approx */
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+
+        .pack-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.75);
+        }
+
+        /* frosted panel inside pack */
+        .frost {
+            backdrop-filter: blur(8px) saturate(120%);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+            padding: .75rem;
+            border-radius: 10px;
+        }
+
+        /* strong accent bar on left of titles */
+        .accent-bar {
+            width: 5px;
+            height: 36px;
+            background: linear-gradient(180deg, var(--blue), #2a76c9);
+            border-radius: 4px;
+        }
+
+        /* make inputs darker and cleaner */
+        .input-dark {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        /* ensure fixed top logo is visible on dark background */
+        .logo-small {
+            filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.7));
+            border-radius: 8px;
+        }
+
+        /* reveal on scroll */
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px) scale(.995);
+            transition: all .7s cubic-bezier(.2, .9, .2, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: none;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none
+        }
+    </style>
+</head>
+
+<body class="text-white antialiased">
+
+    <!-- LOADER -->
+    <div id="loader" aria-hidden="false">
+        <div class="spinner" role="img" aria-label="loading"></div>
+        <div style="margin-top:12px;opacity:.85">Loading Waheeb Fit...</div>
+    </div>
+
+    <!-- small top-right logo -->
+    <img src="logo.jpg" alt="Logo" class="fixed top-4 right-4 w-10 h-10 logo-small z-50" />
+
+    <!-- LANG SWITCH (center top) -->
+    <div class="lang-switch" aria-hidden="false">
+        <a href="index-en.html" class="active">EN</a>
+        <a href="#">AR</a>
+    </div>
+
+    <main class="max-w-[460px] mx-auto pb-28">
+
+        <!-- HERO -->
+        <section id="hero" class="hero-bg relative h-screen flex items-center justify-center">
+            <!-- entrance overlay (animates when hero enters viewport) -->
+            <div id="heroEntrance" class="hero-entrance" aria-hidden="true"></div>
+
+            <!-- dark overlay already in bg; content sits above -->
+            <div class="relative z-10 px-6 text-center">
+                <h1 class="hero-title text-4xl sm:text-5xl font-extrabold tracking-tight">WAHEEB FIT</h1>
+                <div class="mx-auto mt-3"
+                    style="height:2px; width:120px; background: linear-gradient(90deg, transparent, rgba(31,163,255,0.9), transparent); border-radius:2px;">
+                </div>
+                <p class="mt-2 text-sm text-sky-200/80">Strength • Discipline • Transformation</p>
+
+                <div class="mt-6 flex gap-3 justify-center">
+                    <a href="#contact"
+                        class="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--blue)] to-[#2a76c9] font-semibold shadow-lg">Book
+                        Session</a>
+                </div>
+
+                <div class="mt-8 text-xs text-sky-200/60 animate-bounce">Swipe down ↓</div>
+            </div>
+
+            <div class="absolute bottom-0 left-0 right-0 overflow-hidden leading-[0]">
+                <svg viewBox="0 0 1200 80" preserveAspectRatio="none" class="w-full h-[80px]">
+                    <path d="M0,0 C300,80 900,0 1200,60 L1200,80 L0,80 Z" fill="#02060b" />
+                </svg>
+            </div>
+        </section>
+
+        <!-- ABOUT (coach image beside bio) -->
+        <section class="bg-[#07080a] pt-6 pb-6 px-5 relative reveal">
+            <div class="absolute -top-10 left-0 right-0 pointer-events-none">
+                <svg viewBox="0 0 1200 40" preserveAspectRatio="none" class="w-full h-[40px]">
+                    <path d="M0,40 C300,0 900,40 1200,10 L1200,40 L0,40 Z" fill="#07080a" />
+                </svg>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <!-- coach square image (use background fallback if file missing) -->
+                <div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-[#0b2940]">
+                    <img src="coach.jpeg" alt="Coach" class="w-full h-full object-cover" />
+                </div>
+
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold text-sky-200">About the Coach</h2>
+                    <p class="mt-2 text-sky-100/80 leading-6 text-sm">
+                        Waheeb is a certified personal trainer specializing in strength-building, body recomposition,
+                        and practical nutrition plans with weekly follow-ups and clear initial assessment.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <svg viewBox="0 0 1200 60" preserveAspectRatio="none" class="w-full h-[60px]">
+                    <path d="M0,0 C350,60 850,0 1200,40 L1200,60 L0,60 Z" fill="#05060a" />
+                </svg>
+            </div>
+        </section>
+
+        <!-- BEFORE / AFTER -->
+        <section class="bg-[#050608] pt-2 pb-8 px-5 reveal">
+            <h3 class="text-lg font-bold text-sky-200">Before / After</h3>
+            <div class="mt-4 flex gap-3 overflow-x-auto no-scrollbar pb-3">
+                <div class="min-w-[58%] h-36 rounded-lg shadow-md"
+                    style="background-image: linear-gradient(to top, rgba(3,6,10,0.6), rgba(31,163,255,0.06)), url('before1.jpg'); background-size:cover; background-position:center;">
+                </div>
+                <div class="min-w-[58%] h-36 rounded-lg shadow-md"
+                    style="background-image: linear-gradient(to top, rgba(3,6,10,0.6), rgba(31,163,255,0.06)), url('after1.jpg'); background-size:cover; background-position:center;">
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <svg viewBox="0 0 1200 60" preserveAspectRatio="none" class="w-full h-[60px]">
+                    <path d="M0,0 C200,80 1000,-20 1200,40 L1200,60 L0,60 Z" fill="#050608" />
+                </svg>
+            </div>
+        </section>
+
+        <!-- PACKAGES (frosted image cards with strong dark feel) -->
+        <section class="bg-[#050608] pt-2 pb-8 px-5 reveal">
+            <h3 class="text-lg font-bold text-sky-200">Packages</h3>
+
+            <div class="mt-4 space-y-4">
+                <!-- Card 1 -->
+                <div class="pack-card"
+                    style="background-image: linear-gradient(to top, rgba(2,3,6,0.75), rgba(31,163,255,0.04)), url('pack1.jpg');">
+                    <!-- subtle vignette and left accent -->
+                    <div class="absolute inset-0"
+                        style="background: linear-gradient(90deg, rgba(0,0,0,0.35), transparent 30%);"></div>
+                    <div class="absolute inset-0 p-4 flex flex-col justify-end">
+                        <div class="frost w-full">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="accent-bar"></div>
+                                    <div>
+                                        <div class="font-bold text-lg">Transformation Pack</div>
+                                        <div class="text-xs text-sky-200/70">12 weeks + meal plan & follow-up</div>
+                                    </div>
+                                </div>
+                                <div class="text-xl font-extrabold text-[var(--blue)]">$199</div>
+                            </div>
+                            <div class="mt-3 flex gap-2">
+                                <a href="tel:+249xxxxxxxx"
+                                    class="flex-1 text-center py-2 rounded-lg bg-gradient-to-r from-[var(--blue)] to-[#2a76c9] font-bold">Book</a>
+                                <a href="https://wa.me/249xxxxxxxx"
+                                    class="py-2 px-3 rounded-lg bg-[rgba(255,255,255,0.03)]">WhatsApp</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="pack-card"
+                    style="background-image: linear-gradient(to top, rgba(2,3,6,0.75), rgba(31,163,255,0.04)), url('pack2.jpg');">
+                    <div class="absolute inset-0"
+                        style="background: linear-gradient(90deg, rgba(0,0,0,0.35), transparent 30%);"></div>
+                    <div class="absolute inset-0 p-4 flex flex-col justify-end">
+                        <div class="frost w-full">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="accent-bar"></div>
+                                    <div>
+                                        <div class="font-bold text-lg">Challenge Pack</div>
+                                        <div class="text-xs text-sky-200/70">8 weeks — strength & endurance focus</div>
+                                    </div>
+                                </div>
+                                <div class="text-xl font-extrabold text-[var(--blue)]">$129</div>
+                            </div>
+                            <div class="mt-3 flex gap-2">
+                                <a href="tel:+249xxxxxxxx"
+                                    class="flex-1 text-center py-2 rounded-lg bg-gradient-to-r from-[var(--blue)] to-[#2a76c9] font-bold">Book</a>
+                                <a href="https://wa.me/249xxxxxxxx"
+                                    class="py-2 px-3 rounded-lg bg-[rgba(255,255,255,0.03)]">WhatsApp</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="pack-card"
+                    style="background-image: linear-gradient(to top, rgba(2,3,6,0.75), rgba(31,163,255,0.04)), url('pack3.jpg');">
+                    <div class="absolute inset-0"
+                        style="background: linear-gradient(90deg, rgba(0,0,0,0.35), transparent 30%);"></div>
+                    <div class="absolute inset-0 p-4 flex flex-col justify-end">
+                        <div class="frost w-full">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="accent-bar"></div>
+                                    <div>
+                                        <div class="font-bold text-lg">Continuity Pack</div>
+                                        <div class="text-xs text-sky-200/70">Monthly subscription with weekly follow-up
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-xl font-extrabold text-[var(--blue)]">$49</div>
+                            </div>
+                            <div class="mt-3 flex gap-2">
+                                <a href="tel:+249xxxxxxxx"
+                                    class="flex-1 text-center py-2 rounded-lg bg-gradient-to-r from-[var(--blue)] to-[#2a76c9] font-bold">Book</a>
+                                <a href="https://wa.me/249xxxxxxxx"
+                                    class="py-2 px-3 rounded-lg bg-[rgba(255,255,255,0.03)]">WhatsApp</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="mt-6">
+                <svg viewBox="0 0 1200 80" preserveAspectRatio="none" class="w-full h-[80px]">
+                    <path d="M0,40 C300,0 900,80 1200,20 L1200,80 L0,80 Z" fill="#050608" />
+                </svg>
+            </div>
+        </section>
+
+        <!-- CONTACT -->
+        <section class="pt-6 pb-12 px-5 reveal">
+            <h3 class="text-lg font-bold text-sky-200">Quick Contact</h3>
+            <div class="mt-3 grid gap-3">
+                <input placeholder="Your name" class="px-3 py-2 rounded-lg input-dark text-white text-sm" />
+                <input placeholder="Phone number" class="px-3 py-2 rounded-lg input-dark text-white text-sm" />
+                <textarea rows="3" placeholder="Your message"
+                    class="px-3 py-2 rounded-lg input-dark text-white text-sm"></textarea>
+                <div class="flex gap-2">
+                    <a href="tel:+249xxxxxxxx"
+                        class="flex-1 py-2 rounded-lg bg-gradient-to-r from-[var(--blue)] to-[#2a76c9] text-center font-bold">Call
+                        Now</a>
+                    <a href="mailto:waheeb@example.com"
+                        class="py-2 px-3 rounded-lg bg-[rgba(255,255,255,0.03)]">Email</a>
+                </div>
+            </div>
+        </section>
+
+        <footer class="text-center text-xs text-sky-200/60 pb-8">Mobile-first design — Colors: Black • Light Blue •
+            Accents</footer>
+    </main>
+
+    <!-- FLOATING CONSULT BUTTON (bottom-right) -->
+    <button id="openFree" aria-haspopup="dialog" aria-controls="freeModal"
+        class="fixed z-40 bottom-5 right-5 w-16 h-16 rounded-full bg-gradient-to-tr from-[var(--blue)] to-[#2a76c9] shadow-2xl flex items-center justify-center text-white text-sm font-bold">
+        Consult
+    </button>
+
+    <!-- MODAL (Free Consultation) -->
+    <div id="freeModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog"
+        aria-modal="true" aria-hidden="true">
+        <div id="backdrop" class="absolute inset-0" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);">
+        </div>
+
+        <div class="relative z-50 w-full max-w-md mx-auto bg-[#050608] rounded-2xl shadow-xl overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3">
+                <div>
+                    <div class="font-bold text-lg">Free Consultation</div>
+                    <div class="text-xs text-sky-200/70">Short assessment + plan suggestion</div>
+                </div>
+                <button id="closeFree" class="text-white/80 text-xl px-2" aria-label="Close">&times;</button>
+            </div>
+
+            <div class="p-4 space-y-3">
+                <p class="text-sm text-sky-200/80">The consultation includes: goal evaluation, quick nutrition &
+                    training tips, and a suggested follow-up plan. Duration: short message or 10-15 min call.</p>
+
+                <form id="modalForm" class="grid gap-3">
+                    <input name="name" required placeholder="Your name"
+                        class="w-full px-3 py-2 rounded-lg input-dark text-white text-sm" />
+                    <input name="phone" required placeholder="WhatsApp number"
+                        class="w-full px-3 py-2 rounded-lg input-dark text-white text-sm" />
+                    <select name="goal" class="w-full px-3 py-2 rounded-lg input-dark text-white text-sm">
+                        <option value="fat-loss">Fat loss</option>
+                        <option value="muscle">Muscle gain</option>
+                        <option value="fitness">Improve fitness</option>
+                    </select>
+
+                    <textarea name="note" rows="3" placeholder="Short note about your goal or current status"
+                        class="w-full px-3 py-2 rounded-lg input-dark text-white text-sm"></textarea>
+
+                    <div class="flex gap-2">
+                        <button type="submit"
+                            class="flex-1 py-2 rounded-lg bg-gradient-to-r from-[var(--blue)] to-[#2a76c9] font-bold">Request
+                            Consultation</button>
+                        <a href="https://wa.me/249xxxxxxxx"
+                            class="py-2 px-3 rounded-lg bg-[rgba(255,255,255,0.03)] flex items-center">WhatsApp</a>
+                    </div>
+
+                    <p class="text-xs text-sky-200/70">We will reply within 24 hours. This consultation is complimentary
+                        and initial.</p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // LOADER: hide and show main
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 300);
+            }
+        });
+
+        // reveal on scroll for sections
+        const reveals = document.querySelectorAll('.reveal');
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) e.target.classList.add('active');
+            });
+        }, { threshold: 0.18 });
+        reveals.forEach(r => io.observe(r));
+
+        // HERO entrance overlay animation when hero enters viewport
+        const hero = document.getElementById('hero');
+        const heroEntrance = document.getElementById('heroEntrance');
+        if (hero && heroEntrance) {
+            const heroObserver = new IntersectionObserver((entries) => {
+                entries.forEach(en => {
+                    if (en.isIntersecting) {
+                        heroEntrance.classList.add('active');
+                    } else {
+                        // keep background visually fixed but remove entrance if scrolled away
+                        heroEntrance.classList.remove('active');
+                    }
+                });
+            }, { threshold: 0.15 });
+            heroObserver.observe(hero);
+        }
+
+        // modal logic
+        const openBtn = document.getElementById('openFree');
+        const modal = document.getElementById('freeModal');
+        const closeBtn = document.getElementById('closeFree');
+        const backdrop = document.getElementById('backdrop');
+        const modalForm = document.getElementById('modalForm');
+
+        function showModal() {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideModal() {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+
+        openBtn.addEventListener('click', showModal);
+        closeBtn.addEventListener('click', hideModal);
+        backdrop.addEventListener('click', hideModal);
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) hideModal();
+        });
+
+        modalForm && modalForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            alert('Thanks! We received your consultation request. We will reply within 24 hours.');
+            this.reset();
+            hideModal();
+        });
+    </script>
+</body>
+
+</html>
